@@ -1,14 +1,11 @@
 # import the necessary packages
-from __future__ import print_function
 from imutils.video import WebcamVideoStream
-from imutils.video import FPS
 import imutils
 import cv2
 import numpy as np
 import os
 import tarfile
 import tensorflow as tf
-import time
 import six.moves.urllib as urllib
 
 from object_detection.utils import label_map_util
@@ -54,26 +51,15 @@ label_map = label_map_util.load_labelmap(PATH_TO_LABELS)
 categories = label_map_util.convert_label_map_to_categories(label_map, max_num_classes=NUM_CLASSES, use_display_name=True)
 category_index = label_map_util.create_category_index(categories)
 
-# Size, in inches, of the output images.
-IMAGE_SIZE = (12, 8)
-
-print('Start detection!')
+# Start the stream
+vs = WebcamVideoStream(src=0).start()
 
 with detection_graph.as_default():
         sess = tf.Session(graph=detection_graph)
-        # created a *threaded* video stream, allow the camera sensor to warmup,
-        # and start the FPS counter
-        vs = WebcamVideoStream(src=0).start()
-        fps = FPS().start()
-
         while 1:
-            # grab the frame from the threaded video stream and resize it
-            # to have a maximum width of 400 pixels
+            # grab the frame from the threaded video stream
             image_np = vs.read()
-            image_np = imutils.resize(image_np, width=800)
-
-            # update the FPS counter
-            fps.update()
+            image_np = imutils.resize(image_np, width=400)
 
             # Expand dimensions since the model expects images to have shape: [1, None, None, 3]
             image_np_expanded = np.expand_dims(image_np, axis=0)
@@ -90,7 +76,6 @@ with detection_graph.as_default():
             (boxes, scores, classes, num_detections) = sess.run(
                 [boxes, scores, classes, num_detections],
                 feed_dict={image_tensor: image_np_expanded})
-            end = time.time()
 
             # Visualization of the results of a detection.
             vis_util.visualize_boxes_and_labels_on_image_array(
@@ -101,8 +86,10 @@ with detection_graph.as_default():
               category_index,
               use_normalized_coordinates=True,
               line_thickness=8)
+
             # visualize stream
             cv2.imshow("Frame", image_np)
             key = cv2.waitKey(1) & 0xFF
-
-fps.stop()
+            if cv2.waitKey(25) & 0xFF == ord('q'):
+                cv2.destroyAllWindows()
+                break
