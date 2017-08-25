@@ -89,7 +89,6 @@ with detection_graph.as_default():
 
             # visualize stream
             cv2.imshow("Frame", image_np)
-            key = cv2.waitKey(1) & 0xFF
-            if cv2.waitKey(25) & 0xFF == ord('q'):
+            if cv2.waitKey(1) & 0xFF == ord('q'):
                 cv2.destroyAllWindows()
                 break
